@@ -5,6 +5,7 @@ import javafx.application.Application;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Scene;
@@ -12,13 +13,19 @@ import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableRow;
+import javafx.scene.control.TableView;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import javafx.util.converter.NumberStringConverter;
 
 /**
@@ -41,6 +48,7 @@ public class Prisoner extends Application {
     private Button buttonPause;
     private BorderPane root;
     private GraphicsContext gc;
+    private Button buttonInfo;
 
     private enum State {
         STOPPED, RUNNING, PAUSED
@@ -92,6 +100,11 @@ public class Prisoner extends Application {
         buttonPause.setOnAction((ActionEvent event) -> {
             state = State.PAUSED;
             updateUi();
+        });
+
+        buttonInfo.setOnAction((ActionEvent event) -> {
+            buttonInfo.setDisable(true);
+            showInfo();
         });
 
         world = new World();
@@ -149,7 +162,7 @@ public class Prisoner extends Application {
 
     public HBox addHBox() {
         HBox hbox = new HBox();
-        hbox.setPadding(new Insets(15, 12, 15, 12));
+        hbox.setPadding(new Insets(15, 12, 0, 12));
         hbox.setSpacing(10);
         //hbox.setStyle("-fx-background-color: #336699;");
 
@@ -189,7 +202,10 @@ public class Prisoner extends Application {
         imageView.setFitHeight(24);
         buttonPause.setGraphic(imageView);
 
-        hbox.getChildren().addAll(labelB, textB, labelP, textP, labelDelay, textDelay, buttonRun, buttonStop, buttonPause);
+        buttonInfo = new Button("?");
+        HBox.setMargin(buttonInfo, new Insets(0, 0, 0, 24));
+
+        hbox.getChildren().addAll(labelB, textB, labelP, textP, labelDelay, textDelay, buttonRun, buttonStop, buttonPause, buttonInfo);
 
         hbox.setAlignment(Pos.CENTER);
         return hbox;
@@ -231,5 +247,32 @@ public class Prisoner extends Application {
     private void calculateOffsets(Canvas canvas) {
         offsetX = (int) Math.round(((canvas.getWidth() / 2f) - (world.getN() / 2f) * (double) cellWidth));
         offsetY = (int) Math.round(((canvas.getHeight() / 2f) - (world.getN() / 2f) * (double) cellWidth));
+    }
+
+    private void showInfo() {
+        Stage infoStage = new Stage();
+        infoStage.setOnCloseRequest((WindowEvent we) -> {
+            buttonInfo.setDisable(false);
+        });
+        Pane rootInfo = new VBox();
+        rootInfo.setPadding(new Insets(15, 12, 15, 12));
+        Scene scene = new Scene(rootInfo, 600, 600);
+        Label info = new Label("The spatial variant of the iterated prisoner's dilemma is a simple yet powerful model for the problem of cooperation versus conflict in groups. The applet below demonstrates the spread of 'altruism' and 'exploitation for personal gain' in an interacting population of individuals learning from each other by experience. Initially the population consists of cooperators and a certain amount of defectors (a fraction represented by p). The advantage of defection is determined by the the value of b in the 'payoff matrix' (see below) which is used to calculate the payoff after each round for each 'player' on the basis of its strategy. For the next round a player determines its new strategy by selecting the most favourable strategy from itself and its direct neighbours. (Ref. A.L. Lloyd, Sci. Amer., June 1995, 80-83");
+        info.setWrapText(true);
+//        TableView payoffTable = new TableView();
+//        payoffTable.setSelectionModel(null);
+//        TableColumn opponentColumn = new TableColumn("opponent");
+//        TableColumn cooperateColumn = new TableColumn("cooperate");
+//        cooperateColumn.setSortable(false);
+//        TableColumn defectColumn = new TableColumn("defect");
+//        defectColumn.setSortable(false);
+//        opponentColumn.getColumns().addAll(cooperateColumn, defectColumn);
+//        payoffTable.getColumns().addAll(opponentColumn);
+       
+        
+        rootInfo.getChildren().addAll(info, payoffTable);
+        infoStage.setTitle("The Prisoner's Dilemma");
+        infoStage.setScene(scene);
+        infoStage.show();
     }
 }
