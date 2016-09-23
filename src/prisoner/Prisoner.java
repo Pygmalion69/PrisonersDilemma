@@ -17,8 +17,12 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.Rectangle;
 import javafx.stage.Stage;
+import javafx.stage.WindowEvent;
 import javafx.util.converter.NumberStringConverter;
 
 /**
@@ -30,6 +34,10 @@ public class Prisoner extends Application {
     private World world;
     private final IntegerProperty delay = new SimpleIntegerProperty(100);
     private final Color c[][] = new Color[3][3];
+    Color blue = Color.rgb(0, 0, 255);
+    Color red = Color.rgb(255, 0, 0);
+    Color green = Color.rgb(0, 255, 0);
+    Color yellow = Color.rgb(255, 255, 0);
     private final int cellWidth = 5;
     private int offsetX = 0;
     private int offsetY = 0;
@@ -41,8 +49,10 @@ public class Prisoner extends Application {
     private Button buttonPause;
     private BorderPane root;
     private GraphicsContext gc;
+    private Button buttonInfo;
 
     private enum State {
+
         STOPPED, RUNNING, PAUSED
     };
 
@@ -94,6 +104,11 @@ public class Prisoner extends Application {
             updateUi();
         });
 
+        buttonInfo.setOnAction((ActionEvent event) -> {
+            buttonInfo.setDisable(true);
+            showInfo();
+        });
+
         world = new World();
         world.init();
         state = State.RUNNING;
@@ -104,10 +119,10 @@ public class Prisoner extends Application {
 
         updateUi();
 
-        c[1][1] = Color.rgb(0, 0, 255);    // blue
-        c[2][2] = Color.rgb(255, 0, 0);    // red                                              
-        c[1][2] = Color.rgb(0, 255, 0);    // green                                           
-        c[2][1] = Color.rgb(255, 255, 0);  // yellow
+        c[1][1] = blue;
+        c[2][2] = red;
+        c[1][2] = green;
+        c[2][1] = yellow;
 
         calculateOffsets(canvas);
 
@@ -149,7 +164,7 @@ public class Prisoner extends Application {
 
     public HBox addHBox() {
         HBox hbox = new HBox();
-        hbox.setPadding(new Insets(15, 12, 15, 12));
+        hbox.setPadding(new Insets(15, 12, 0, 12));
         hbox.setSpacing(10);
         //hbox.setStyle("-fx-background-color: #336699;");
 
@@ -189,7 +204,10 @@ public class Prisoner extends Application {
         imageView.setFitHeight(24);
         buttonPause.setGraphic(imageView);
 
-        hbox.getChildren().addAll(labelB, textB, labelP, textP, labelDelay, textDelay, buttonRun, buttonStop, buttonPause);
+        buttonInfo = new Button("?");
+        HBox.setMargin(buttonInfo, new Insets(0, 0, 0, 24));
+
+        hbox.getChildren().addAll(labelB, textB, labelP, textP, labelDelay, textDelay, buttonRun, buttonStop, buttonPause, buttonInfo);
 
         hbox.setAlignment(Pos.CENTER);
         return hbox;
@@ -231,5 +249,66 @@ public class Prisoner extends Application {
     private void calculateOffsets(Canvas canvas) {
         offsetX = (int) Math.round(((canvas.getWidth() / 2f) - (world.getN() / 2f) * (double) cellWidth));
         offsetY = (int) Math.round(((canvas.getHeight() / 2f) - (world.getN() / 2f) * (double) cellWidth));
+    }
+
+    private void showInfo() {
+        Stage infoStage = new Stage();
+        infoStage.setOnCloseRequest((WindowEvent we) -> {
+            buttonInfo.setDisable(false);
+        });
+        Pane rootInfo = new VBox();
+        rootInfo.setPadding(new Insets(15, 12, 15, 12));
+        Scene scene = new Scene(rootInfo, 600, 600);
+
+        Label lbInfo = new Label("The spatial variant of the iterated prisoner's dilemma is a simple yet powerful model for the problem of cooperation versus conflict in groups. The app demonstrates the spread of 'altruism' and 'exploitation for personal gain' in an interacting population of individuals learning from each other by experience. Initially the population consists of cooperators and a certain amount of defectors (a fraction represented by p). The advantage of defection is determined by the the value of b in the 'payoff matrix' (see below) which is used to calculate the payoff after each round for each 'player' on the basis of its strategy. For the next round a player determines its new strategy by selecting the most favourable strategy from itself and its direct neighbours. (Ref. A.L. Lloyd, Sci. Amer., June 1995, 80-83");
+        lbInfo.setWrapText(true);
+
+        ImageView ivPayoff = new ImageView();
+        ivPayoff.setImage(new Image(getClass().getResourceAsStream("images/payoff.png")));
+        ivPayoff.setFitWidth(250);
+        ivPayoff.setPreserveRatio(true);
+        VBox vbPayoff = new VBox();
+        vbPayoff.setAlignment(Pos.CENTER);
+        VBox.setMargin(vbPayoff, new Insets(15, 0, 15, 0));
+        vbPayoff.getChildren().add(ivPayoff);
+
+        Label lbB = new Label("b: advantage for defection when opponent cooperates");
+        VBox.setMargin(lbB, new Insets(0, 0, 15, 0));
+
+        Label lbP = new Label("p: fraction (0..1) of defectors in the first round");
+        VBox.setMargin(lbP, new Insets(0, 0, 15, 0));
+
+        HBox hbLegendBlue = new HBox();
+        Rectangle blueSquare = new Rectangle(8, 8, blue);
+        Label lbBlue = new Label("is cooperating, did cooperate");
+        HBox.setMargin(blueSquare, new Insets(5, 6, 0, 0));
+        hbLegendBlue.getChildren().addAll(blueSquare, lbBlue);
+        VBox.setMargin(hbLegendBlue, new Insets(0, 0, 15, 0));
+
+        HBox hbLegendRed = new HBox();
+        Rectangle redSquare = new Rectangle(8, 8, red);
+        Label lbRed = new Label("is defecting, did defect");
+        HBox.setMargin(redSquare, new Insets(5, 6, 0, 0));
+        hbLegendRed.getChildren().addAll(redSquare, lbRed);
+        VBox.setMargin(hbLegendRed, new Insets(0, 0, 15, 0));
+        
+        HBox hbLegendGreen = new HBox();
+        Rectangle greenSquare = new Rectangle(8, 8, green);
+        Label lbGreen = new Label("is cooperating, did defect");
+        HBox.setMargin(greenSquare, new Insets(5, 6, 0, 0));
+        hbLegendGreen.getChildren().addAll(greenSquare, lbGreen);
+        VBox.setMargin(hbLegendGreen, new Insets(0, 0, 15, 0));
+        
+        HBox hbLegendYellow = new HBox();
+        Rectangle yellowSquare = new Rectangle(8, 8, yellow);
+        Label lbYellow = new Label("is defecting, did cooperate");
+        HBox.setMargin(yellowSquare, new Insets(5, 6, 0, 0));
+        hbLegendYellow.getChildren().addAll(yellowSquare, lbYellow);
+        VBox.setMargin(hbLegendYellow, new Insets(0, 0, 15, 0));
+
+        rootInfo.getChildren().addAll(lbInfo, vbPayoff, lbB, lbP, hbLegendBlue, hbLegendRed, hbLegendGreen, hbLegendYellow);
+        infoStage.setTitle("The Prisoner's Dilemma");
+        infoStage.setScene(scene);
+        infoStage.show();
     }
 }
