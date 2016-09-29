@@ -24,6 +24,12 @@ public class World {
     private double[][] payoff;
 
     private boolean newWorld;
+    
+    private long generation;
+
+    public long getGeneration() {
+        return generation;
+    }
 
     public DoubleProperty getB() {
         return b;
@@ -63,6 +69,7 @@ public class World {
 
     public synchronized void update() {
         newWorld = false;
+        generation++;
         int i, j, k, l;
         double pa, hp;
         for (i = 1; i <= n; i++) {
@@ -93,7 +100,7 @@ public class World {
         }
     }
 
-    public void nextGeneration() {
+    public synchronized void nextGeneration() {
         newWorld = false;
         // next generation to current
         // deep array copy!
@@ -112,7 +119,8 @@ public class World {
         return sn;
     }
 
-    private void generate() {
+    private synchronized void generate() {
+        generation = 0;
         for (int i = 1; i <= n; i++) {
             for (int j = 1; j <= n; j++) {
                 s[i][j] = 1;

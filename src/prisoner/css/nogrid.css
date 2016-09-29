@@ -1,0 +1,11 @@
+/* 
+    Created on : Sep 28, 2016, 3:46:25 PM
+    Author     : helfrich
+*/
+
+.chart-vertical-grid-lines {
+    -fx-stroke: #00000000;
+}
+/*.chart-horizontal-grid-lines {
+    -fx-stroke: #00000000;
+}*/

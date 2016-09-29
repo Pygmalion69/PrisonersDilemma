@@ -1,5 +1,6 @@
 package prisoner;
 
+import java.util.LinkedList;
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.beans.property.IntegerProperty;
@@ -10,6 +11,10 @@ import javafx.geometry.Pos;
 import javafx.scene.Scene;
 import javafx.scene.canvas.Canvas;
 import javafx.scene.canvas.GraphicsContext;
+import javafx.scene.chart.CategoryAxis;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -50,6 +55,10 @@ public class Prisoner extends Application {
     private BorderPane root;
     private GraphicsContext gc;
     private Button buttonInfo;
+    private final LinkedList<HistoryItem> llHistory = new LinkedList();
+    private Button buttonChart;
+
+    private final int historySize = 1000;
 
     private enum State {
 
@@ -72,7 +81,7 @@ public class Prisoner extends Application {
         root.setTop(hbox);
         root.setCenter(canvas);
 
-        Scene scene = new Scene(root, 600, 600);
+        Scene scene = new Scene(root, 680, 600);
 
         primaryStage.setTitle("The Prisoner's Dilemma");
         primaryStage.setScene(scene);
@@ -87,6 +96,7 @@ public class Prisoner extends Application {
                     break;
                 case STOPPED:
                     world.init();
+                    llHistory.clear();
                     state = State.RUNNING;
                     break;
             }
@@ -102,6 +112,11 @@ public class Prisoner extends Application {
         buttonPause.setOnAction((ActionEvent event) -> {
             state = State.PAUSED;
             updateUi();
+        });
+
+        buttonChart.setOnAction((ActionEvent event) -> {
+            buttonChart.setDisable(true);
+            showChart();
         });
 
         buttonInfo.setOnAction((ActionEvent event) -> {
@@ -137,28 +152,57 @@ public class Prisoner extends Application {
                         world.nextGeneration();
                     }
                     world.update();
-                    renderWorld();
+                    renderWorld(true);
                     lastFrameNanos = now;
                 } else if (state != State.STOPPED) {
-                    renderWorld(); // always provide a frame, even when rendered before
+                    renderWorld(false); // always provide a frame, even when rendered before
                 }
             }
         }.start();
 
     }
 
-    private void renderWorld() {
+    private synchronized void renderWorld(boolean toHistory) {
+        HistoryItem historyItem = null;
+        if (toHistory) {
+            historyItem = new HistoryItem();
+            historyItem.generation = world.getGeneration();
+        }
         int n = world.getN();
         int[][] s = world.getS();
         int[][] sn = world.getSn();
         {
             for (int i = 1; i <= n; i++) {
                 for (int j = 1; j <= n; j++) {
-                    gc.setFill(c[sn[i][j]][s[i][j]]);
+                    Color fill = c[sn[i][j]][s[i][j]];
+                    gc.setFill(fill);
                     gc.fillRect(offsetX + i * cellWidth, offsetY + j * cellWidth, cellWidth, cellWidth);
-                    // s[i][j] = sn[i][j];
+                    if (toHistory && historyItem != null) {
+                        updateHistoryItem(historyItem, fill); // We keep track of the actual rendering
+                    }                    // s[i][j] = sn[i][j];
                 }
             }
+        }
+        if (toHistory && historyItem != null) {
+            llHistory.add(historyItem);
+            if (llHistory.size() > historySize) {
+                llHistory.removeFirst();
+            }
+        }
+    }
+
+    private void updateHistoryItem(HistoryItem historyItem, Color fill) {
+        if (fill.equals(blue)) {
+            historyItem.blueCount++;
+        }
+        if (fill.equals(red)) {
+            historyItem.redCount++;
+        }
+        if (fill.equals(green)) {
+            historyItem.greenCount++;
+        }
+        if (fill.equals(yellow)) {
+            historyItem.yellowCount++;
         }
     }
 
@@ -204,10 +248,22 @@ public class Prisoner extends Application {
         imageView.setFitHeight(24);
         buttonPause.setGraphic(imageView);
 
-        buttonInfo = new Button("?");
-        HBox.setMargin(buttonInfo, new Insets(0, 0, 0, 24));
+        buttonChart = new Button();
+        Image imageChart = new Image(getClass().getResourceAsStream("images/line-chart.png"));
+        imageView = new ImageView(imageChart);
+        imageView.setFitWidth(24);
+        imageView.setFitHeight(24);
+        buttonChart.setGraphic(imageView);
 
-        hbox.getChildren().addAll(labelB, textB, labelP, textP, labelDelay, textDelay, buttonRun, buttonStop, buttonPause, buttonInfo);
+        buttonInfo = new Button();
+        Image imageInfo = new Image(getClass().getResourceAsStream("images/question-circle.png"));
+        imageView = new ImageView(imageInfo);
+        imageView.setFitWidth(24);
+        imageView.setFitHeight(24);
+        buttonInfo.setGraphic(imageView);
+        //HBox.setMargin(buttonInfo, new Insets(0, 0, 0, 24));
+
+        hbox.getChildren().addAll(labelB, textB, labelP, textP, labelDelay, textDelay, buttonRun, buttonStop, buttonPause, buttonChart, buttonInfo);
 
         hbox.setAlignment(Pos.CENTER);
         return hbox;
@@ -251,6 +307,51 @@ public class Prisoner extends Application {
         offsetY = (int) Math.round(((canvas.getHeight() / 2f) - (world.getN() / 2f) * (double) cellWidth));
     }
 
+    private void showChart() {
+        Stage chartStage = new Stage();
+        chartStage.setOnCloseRequest((WindowEvent we) -> {
+            buttonChart.setDisable(false);
+        });
+
+        final CategoryAxis xAxis = new CategoryAxis();
+        final NumberAxis yAxis = new NumberAxis();
+        xAxis.setLabel("Generation");
+        final LineChart<String, Number> lineChart
+                = new LineChart<>(xAxis, yAxis);
+        lineChart.setCreateSymbols(false);
+
+        XYChart.Series seriesBlue = new XYChart.Series();
+        seriesBlue.setName("is cooperating, did cooperate");
+
+        XYChart.Series seriesRed = new XYChart.Series();
+        seriesRed.setName("is defecting, did defect");
+
+        XYChart.Series seriesGreen = new XYChart.Series();
+        seriesGreen.setName("is cooperating, did defect");
+
+        XYChart.Series seriesYellow = new XYChart.Series();
+        seriesYellow.setName("is defecting, did cooperate");
+
+        for (HistoryItem historyItem : llHistory) {
+            String generation = String.valueOf(historyItem.generation);
+            seriesBlue.getData().add(new XYChart.Data(generation, historyItem.blueCount));
+            seriesRed.getData().add(new XYChart.Data(generation, historyItem.redCount));
+            seriesGreen.getData().add(new XYChart.Data(generation, historyItem.greenCount));
+            seriesYellow.getData().add(new XYChart.Data(generation, historyItem.yellowCount));
+        }
+
+        Scene scene = new Scene(lineChart, 680, 600);
+        scene.getStylesheets().add(getClass().getResource("css/chart.css").toExternalForm());
+        if (llHistory.size() > 100) {
+            scene.getStylesheets().add(getClass().getResource("css/nogrid.css").toExternalForm());
+        }
+        lineChart.getData().addAll(seriesBlue, seriesRed, seriesGreen, seriesYellow);
+
+        chartStage.setTitle("The Prisoner's Dilemma");
+        chartStage.setScene(scene);
+        chartStage.show();
+    }
+
     private void showInfo() {
         Stage infoStage = new Stage();
         infoStage.setOnCloseRequest((WindowEvent we) -> {
@@ -291,14 +392,14 @@ public class Prisoner extends Application {
         HBox.setMargin(redSquare, new Insets(5, 6, 0, 0));
         hbLegendRed.getChildren().addAll(redSquare, lbRed);
         VBox.setMargin(hbLegendRed, new Insets(0, 0, 15, 0));
-        
+
         HBox hbLegendGreen = new HBox();
         Rectangle greenSquare = new Rectangle(8, 8, green);
         Label lbGreen = new Label("is cooperating, did defect");
         HBox.setMargin(greenSquare, new Insets(5, 6, 0, 0));
         hbLegendGreen.getChildren().addAll(greenSquare, lbGreen);
         VBox.setMargin(hbLegendGreen, new Insets(0, 0, 15, 0));
-        
+
         HBox hbLegendYellow = new HBox();
         Rectangle yellowSquare = new Rectangle(8, 8, yellow);
         Label lbYellow = new Label("is defecting, did cooperate");
