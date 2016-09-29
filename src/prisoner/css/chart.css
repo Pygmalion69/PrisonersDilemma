@@ -1,0 +1,19 @@
+/* 
+    Created on : Sep 28, 2016, 12:53:23 PM
+    Author     : helfrich
+*/
+
+.chart-series-line {    
+    -fx-stroke-width: 2px;
+    -fx-effect: null;
+}
+ 
+.default-color0.chart-series-line { -fx-stroke: #0000ff; }
+.default-color1.chart-series-line { -fx-stroke: #ff0000; }
+.default-color2.chart-series-line { -fx-stroke: #00ff00; }
+.default-color3.chart-series-line { -fx-stroke: #ffff00; }
+
+.default-color0.chart-line-symbol { -fx-background-color: #0000ff; -fx-background-radius: 0;}
+.default-color1.chart-line-symbol { -fx-background-color: #ff0000; -fx-background-radius: 0;}
+.default-color2.chart-line-symbol { -fx-background-color: #00ff00; -fx-background-radius: 0;}
+.default-color3.chart-line-symbol { -fx-background-color: #ffff00; -fx-background-radius: 0;}
