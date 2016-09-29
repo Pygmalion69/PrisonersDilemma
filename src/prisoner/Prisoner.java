@@ -332,13 +332,13 @@ public class Prisoner extends Application {
         XYChart.Series seriesYellow = new XYChart.Series();
         seriesYellow.setName("is defecting, did cooperate");
 
-        for (HistoryItem historyItem : llHistory) {
+        llHistory.stream().forEach((historyItem) -> {
             String generation = String.valueOf(historyItem.generation);
             seriesBlue.getData().add(new XYChart.Data(generation, historyItem.blueCount));
             seriesRed.getData().add(new XYChart.Data(generation, historyItem.redCount));
             seriesGreen.getData().add(new XYChart.Data(generation, historyItem.greenCount));
             seriesYellow.getData().add(new XYChart.Data(generation, historyItem.yellowCount));
-        }
+        });
 
         Scene scene = new Scene(lineChart, 680, 600);
         scene.getStylesheets().add(getClass().getResource("css/chart.css").toExternalForm());
