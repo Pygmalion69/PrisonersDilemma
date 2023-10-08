@@ -1,6 +1,8 @@
 package eu.sergehelfrich.prisoner;
 
 import java.util.LinkedList;
+import java.util.Objects;
+
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.beans.property.IntegerProperty;
@@ -38,7 +40,7 @@ public class Prisoner extends Application {
 
     private World world;
     private final IntegerProperty delay = new SimpleIntegerProperty(100);
-    private final Color c[][] = new Color[3][3];
+    private final Color[][] c = new Color[3][3];
     Color blue = Color.rgb(0, 0, 255);
     Color red = Color.rgb(255, 0, 0);
     Color green = Color.rgb(0, 255, 0);
@@ -55,15 +57,13 @@ public class Prisoner extends Application {
     private BorderPane root;
     private GraphicsContext gc;
     private Button buttonInfo;
-    private final LinkedList<HistoryItem> llHistory = new LinkedList();
+    private final LinkedList<HistoryItem> llHistory = new LinkedList<>();
     private Button buttonChart;
-
-    private final int historySize = 1000;
 
     private enum State {
 
         STOPPED, RUNNING, PAUSED
-    };
+    }
 
     State state = State.STOPPED;
 
@@ -177,14 +177,15 @@ public class Prisoner extends Application {
                     Color fill = c[sn[i][j]][s[i][j]];
                     gc.setFill(fill);
                     gc.fillRect(offsetX + i * cellWidth, offsetY + j * cellWidth, cellWidth, cellWidth);
-                    if (toHistory && historyItem != null) {
+                    if (toHistory) {
                         updateHistoryItem(historyItem, fill); // We keep track of the actual rendering
                     }                    // s[i][j] = sn[i][j];
                 }
             }
         }
-        if (toHistory && historyItem != null) {
+        if (toHistory) {
             llHistory.add(historyItem);
+            int historySize = 1000;
             if (llHistory.size() > historySize) {
                 llHistory.removeFirst();
             }
@@ -228,35 +229,35 @@ public class Prisoner extends Application {
         textDelay.setMaxWidth(68);
 
         buttonRun = new Button();
-        Image imagePlay = new Image(getClass().getResourceAsStream("images/play.png"));
+        Image imagePlay = new Image(Objects.requireNonNull(getClass().getResourceAsStream("images/play.png")));
         ImageView imageView = new ImageView(imagePlay);
         imageView.setFitWidth(24);
         imageView.setFitHeight(24);
         buttonRun.setGraphic(imageView);
 
         buttonStop = new Button();
-        Image imageStop = new Image(getClass().getResourceAsStream("images/stop.png"));
+        Image imageStop = new Image(Objects.requireNonNull(getClass().getResourceAsStream("images/stop.png")));
         imageView = new ImageView(imageStop);
         imageView.setFitWidth(24);
         imageView.setFitHeight(24);
         buttonStop.setGraphic(imageView);
 
         buttonPause = new Button();
-        Image imagePause = new Image(getClass().getResourceAsStream("images/pause.png"));
+        Image imagePause = new Image(Objects.requireNonNull(getClass().getResourceAsStream("images/pause.png")));
         imageView = new ImageView(imagePause);
         imageView.setFitWidth(24);
         imageView.setFitHeight(24);
         buttonPause.setGraphic(imageView);
 
         buttonChart = new Button();
-        Image imageChart = new Image(getClass().getResourceAsStream("images/line-chart.png"));
+        Image imageChart = new Image(Objects.requireNonNull(getClass().getResourceAsStream("images/line-chart.png")));
         imageView = new ImageView(imageChart);
         imageView.setFitWidth(24);
         imageView.setFitHeight(24);
         buttonChart.setGraphic(imageView);
 
         buttonInfo = new Button();
-        Image imageInfo = new Image(getClass().getResourceAsStream("images/question-circle.png"));
+        Image imageInfo = new Image(Objects.requireNonNull(getClass().getResourceAsStream("images/question-circle.png")));
         imageView = new ImageView(imageInfo);
         imageView.setFitWidth(24);
         imageView.setFitHeight(24);
@@ -309,9 +310,7 @@ public class Prisoner extends Application {
 
     private void showChart() {
         Stage chartStage = new Stage();
-        chartStage.setOnCloseRequest((WindowEvent we) -> {
-            buttonChart.setDisable(false);
-        });
+        chartStage.setOnCloseRequest((WindowEvent we) -> buttonChart.setDisable(false));
 
         final CategoryAxis xAxis = new CategoryAxis();
         final NumberAxis yAxis = new NumberAxis();
@@ -320,32 +319,36 @@ public class Prisoner extends Application {
                 = new LineChart<>(xAxis, yAxis);
         lineChart.setCreateSymbols(false);
 
-        XYChart.Series seriesBlue = new XYChart.Series();
+        XYChart.Series<String, Number> seriesBlue = new XYChart.Series<>();
         seriesBlue.setName("is cooperating, did cooperate");
 
-        XYChart.Series seriesRed = new XYChart.Series();
+        XYChart.Series<String, Number> seriesRed = new XYChart.Series<>();
         seriesRed.setName("is defecting, did defect");
 
-        XYChart.Series seriesGreen = new XYChart.Series();
+        XYChart.Series<String, Number> seriesGreen = new XYChart.Series<>();
         seriesGreen.setName("is cooperating, did defect");
 
-        XYChart.Series seriesYellow = new XYChart.Series();
+        XYChart.Series<String, Number> seriesYellow = new XYChart.Series<>();
         seriesYellow.setName("is defecting, did cooperate");
 
-        llHistory.stream().forEach((historyItem) -> {
+        llHistory.forEach((historyItem) -> {
             String generation = String.valueOf(historyItem.generation);
-            seriesBlue.getData().add(new XYChart.Data(generation, historyItem.blueCount));
-            seriesRed.getData().add(new XYChart.Data(generation, historyItem.redCount));
-            seriesGreen.getData().add(new XYChart.Data(generation, historyItem.greenCount));
-            seriesYellow.getData().add(new XYChart.Data(generation, historyItem.yellowCount));
+            seriesBlue.getData().add(new XYChart.Data<>(generation, historyItem.blueCount));
+            seriesRed.getData().add(new XYChart.Data<>(generation, historyItem.redCount));
+            seriesGreen.getData().add(new XYChart.Data<>(generation, historyItem.greenCount));
+            seriesYellow.getData().add(new XYChart.Data<>(generation, historyItem.yellowCount));
         });
 
         Scene scene = new Scene(lineChart, 680, 600);
-        scene.getStylesheets().add(getClass().getResource("css/chart.css").toExternalForm());
+        scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("css/chart.css")).toExternalForm());
         if (llHistory.size() > 100) {
-            scene.getStylesheets().add(getClass().getResource("css/nogrid.css").toExternalForm());
+            scene.getStylesheets().add(Objects.requireNonNull(getClass().getResource("css/nogrid.css")).toExternalForm());
         }
-        lineChart.getData().addAll(seriesBlue, seriesRed, seriesGreen, seriesYellow);
+        // .addAll: unchecked generics array creation for varargs parameter
+        lineChart.getData().add(seriesBlue);
+        lineChart.getData().add(seriesRed);
+        lineChart.getData().add(seriesGreen);
+        lineChart.getData().add(seriesYellow);
 
         chartStage.setTitle("The Prisoner's Dilemma");
         chartStage.setScene(scene);
@@ -354,18 +357,15 @@ public class Prisoner extends Application {
 
     private void showInfo() {
         Stage infoStage = new Stage();
-        infoStage.setOnCloseRequest((WindowEvent we) -> {
-            buttonInfo.setDisable(false);
-        });
+        infoStage.setOnCloseRequest((WindowEvent we) -> buttonInfo.setDisable(false));
         Pane rootInfo = new VBox();
         rootInfo.setPadding(new Insets(15, 12, 15, 12));
         Scene scene = new Scene(rootInfo, 600, 600);
 
-        Label lbInfo = new Label("The spatial variant of the iterated prisoner's dilemma is a simple yet powerful model for the problem of cooperation versus conflict in groups. The app demonstrates the spread of 'altruism' and 'exploitation for personal gain' in an interacting population of individuals learning from each other by experience. Initially the population consists of cooperators and a certain amount of defectors (a fraction represented by p). The advantage of defection is determined by the the value of b in the 'payoff matrix' (see below) which is used to calculate the payoff after each round for each 'player' on the basis of its strategy. For the next round a player determines its new strategy by selecting the most favourable strategy from itself and its direct neighbours. (Ref. A.L. Lloyd, Sci. Amer., June 1995, 80-83");
-        lbInfo.setWrapText(true);
+        Label lbInfo = getLbInfo();
 
         ImageView ivPayoff = new ImageView();
-        ivPayoff.setImage(new Image(getClass().getResourceAsStream("images/payoff.png")));
+        ivPayoff.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream("images/payoff.png"))));
         ivPayoff.setFitWidth(250);
         ivPayoff.setPreserveRatio(true);
         VBox vbPayoff = new VBox();
@@ -411,5 +411,11 @@ public class Prisoner extends Application {
         infoStage.setTitle("The Prisoner's Dilemma");
         infoStage.setScene(scene);
         infoStage.show();
+    }
+
+    private static Label getLbInfo() {
+        Label lbInfo = new Label("The spatial variant of the iterated prisoner's dilemma is a simple yet powerful model for the problem of cooperation versus conflict in groups. The app demonstrates the spread of 'altruism' and 'exploitation for personal gain' in an interacting population of individuals learning from each other by experience. Initially the population consists of cooperators and a certain amount of defectors (a fraction represented by p). The advantage of defection is determined by the the value of b in the 'payoff matrix' (see below) which is used to calculate the payoff after each round for each 'player' on the basis of its strategy. For the next round a player determines its new strategy by selecting the most favourable strategy from itself and its direct neighbours. (Ref. A.L. Lloyd, Sci. Amer., June 1995, 80-83");
+        lbInfo.setWrapText(true);
+        return lbInfo;
     }
 }

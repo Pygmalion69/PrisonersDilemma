@@ -11,9 +11,9 @@ public class World {
 
     private final DoubleProperty b = new SimpleDoubleProperty(1.85);
     private final DoubleProperty p = new SimpleDoubleProperty(0.1);
-    private int n = 60; // board width / height
-    private int bc[]; //boundary
-    private final double pm[][] = new double[3][3];  // payoff matrix
+    private final int n = 60; // board width / height
+    private int[] bc; //boundary
+    private final double[][] pm = new double[3][3];  // payoff matrix
     private int[][] s; // generation
     private int[][] sn; // next generation
     private double[][] payoff;
@@ -36,10 +36,6 @@ public class World {
 
     public boolean isNewWorld() {
         return newWorld;
-    }
-
-    public void setNewWorld(boolean newWorld) {
-        this.newWorld = newWorld;
     }
 
     public void init() {
@@ -100,9 +96,7 @@ public class World {
         // next generation to current
         // deep array copy!
         for (int i = 1; i <= n; i++) {
-            for (int j = 1; j <= n; j++) {
-                s[i][j] = sn[i][j];
-            }
+            System.arraycopy(sn[i], 1, s[i], 1, n);
         }
     }
 
@@ -139,7 +133,4 @@ public class World {
         return n;
     }
 
-    public void setN(int n) {
-        this.n = n;
-    }
 }
