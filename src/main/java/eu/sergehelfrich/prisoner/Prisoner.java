@@ -1,4 +1,4 @@
-package prisoner;
+package eu.sergehelfrich.prisoner;
 
 import java.util.LinkedList;
 import javafx.animation.AnimationTimer;
