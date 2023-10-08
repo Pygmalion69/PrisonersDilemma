@@ -366,7 +366,7 @@ public class Prisoner extends Application {
 
         ImageView ivPayoff = new ImageView();
         ivPayoff.setImage(new Image(Objects.requireNonNull(getClass().getResourceAsStream("images/payoff.png"))));
-        ivPayoff.setFitWidth(250);
+        ivPayoff.setFitWidth(260);
         ivPayoff.setPreserveRatio(true);
         VBox vbPayoff = new VBox();
         vbPayoff.setAlignment(Pos.CENTER);
@@ -414,7 +414,7 @@ public class Prisoner extends Application {
     }
 
     private static Label getLbInfo() {
-        Label lbInfo = new Label("The spatial variant of the iterated prisoner's dilemma is a simple yet powerful model for the problem of cooperation versus conflict in groups. The app demonstrates the spread of 'altruism' and 'exploitation for personal gain' in an interacting population of individuals learning from each other by experience. Initially the population consists of cooperators and a certain amount of defectors (a fraction represented by p). The advantage of defection is determined by the the value of b in the 'payoff matrix' (see below) which is used to calculate the payoff after each round for each 'player' on the basis of its strategy. For the next round a player determines its new strategy by selecting the most favourable strategy from itself and its direct neighbours. (Ref. A.L. Lloyd, Sci. Amer., June 1995, 80-83");
+        Label lbInfo = new Label("The spatial variant of the iterated prisoner's dilemma is a simple yet powerful model for the problem of cooperation versus conflict in groups. The app demonstrates the spread of 'altruism' and 'exploitation for personal gain' in an interacting population of individuals learning from each other by experience. Initially the population consists of cooperators and a certain amount of defectors (a fraction represented by p). The advantage of defection is determined by the the value of b in the 'payoff matrix' (see below) which is used to calculate the payoff after each round for each 'player' on the basis of its strategy. For the next round a player determines its new strategy by selecting the most favourable strategy from itself and its direct neighbours. (Ref. A.L. Lloyd, Sci. Amer., June 1995, 80-83)");
         lbInfo.setWrapText(true);
         return lbInfo;
     }
